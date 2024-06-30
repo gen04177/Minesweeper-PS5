@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define SCREEN_WIDTH 512 // 16 tiles * 32 pixels per tile
+#define SCREEN_WIDTH 640 // 16 tiles * 32 pixels per tile + panel
 #define SCREEN_HEIGHT 512 // 16 tiles * 32 pixels per tile
 #define TILE_SIZE 32
 #define GRID_WIDTH 16
@@ -27,6 +27,9 @@ bool gameLost = false;
 bool gameWon = false;
 bool gameLoading = false;
 Uint32 gameEndTime = 0;
+Uint32 startTime = 0;
+int bestTime = 999;
+int remainingMines = NUM_MINES;
 
 void initGrid() {
 
@@ -70,6 +73,8 @@ void initGrid() {
     gameLost = false;
     gameWon = false;
     gameLoading = false;
+    startTime = SDL_GetTicks();
+    remainingMines = NUM_MINES;
 }
 
 void renderGrid(SDL_Renderer *renderer, TTF_Font *font) {
@@ -85,7 +90,7 @@ void renderGrid(SDL_Renderer *renderer, TTF_Font *font) {
 
             if (grid[x][y].revealed) {
                 if (grid[x][y].hasMine) {
-                    tileSurface = IMG_Load("/data/minesweeper/mine.jpg");
+                    tileSurface = TTF_RenderText_Solid(font, "M", textColor);
                 } else {
                     char number[2];
                     sprintf(number, "%d", grid[x][y].neighboringMines);
@@ -121,6 +126,58 @@ void renderEndGame(SDL_Renderer *renderer, const char *imagePath) {
     SDL_DestroyTexture(endTexture);
 }
 
+void renderPanel(SDL_Renderer *renderer, TTF_Font *font) {
+    SDL_Color textColor = {255, 255, 255, 255};
+    char buffer[128];
+    SDL_Surface *textSurface;
+    SDL_Texture *textTexture;
+    SDL_Rect textRect;
+
+    // Render time
+    Uint32 elapsedTime = (SDL_GetTicks() - startTime) / 1000;
+    sprintf(buffer, "Time: %d s", elapsedTime);
+    textSurface = TTF_RenderText_Solid(font, buffer, textColor);
+    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    textRect = (SDL_Rect){SCREEN_WIDTH - 120, 50, textSurface->w, textSurface->h};
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+
+    // Render best time
+    sprintf(buffer, "Best Time:");
+    textSurface = TTF_RenderText_Solid(font, buffer, textColor);
+    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    textRect.y += 50;
+    textRect.x = SCREEN_WIDTH - 120;
+    textRect.w = textSurface->w;
+    textRect.h = textSurface->h;
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+
+    sprintf(buffer, "%d s", bestTime);
+    textSurface = TTF_RenderText_Solid(font, buffer, textColor);
+    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    textRect.y += 30;
+    textRect.w = textSurface->w;
+    textRect.h = textSurface->h;
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+
+    // Render remaining mines
+    sprintf(buffer, "Remaining Mines: %d", remainingMines);
+    textSurface = TTF_RenderText_Solid(font, buffer, textColor);
+    textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    textRect.y += 50;
+    textRect.x = SCREEN_WIDTH - 120;
+    textRect.w = textSurface->w;
+    textRect.h = textSurface->h;
+    SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+}
+
 void revealTile(int x, int y) {
     if (x >= 0 && y >= 0 && x < GRID_WIDTH && y < GRID_HEIGHT && !grid[x][y].revealed && !grid[x][y].flagged) {
         grid[x][y].revealed = true;
@@ -152,6 +209,12 @@ void revealTile(int x, int y) {
             if (won) {
                 gameWon = true;
                 gameEndTime = SDL_GetTicks() + 3000;
+
+		Uint32 elapsedTime = (SDL_GetTicks() - startTime) / 1000;
+
+                if (elapsedTime < bestTime) {
+                    bestTime = elapsedTime;
+                }
             }
         }
     }
@@ -176,7 +239,15 @@ void handleControllerInput(SDL_Event *e) {
                 revealTile(cursorX, cursorY);
                 break;
             case SDL_CONTROLLER_BUTTON_B:
-                grid[cursorX][cursorY].flagged = !grid[cursorX][cursorY].flagged;
+                if (!grid[cursorX][cursorY].revealed) {
+                    if (!grid[cursorX][cursorY].flagged && remainingMines > 0) {
+                        grid[cursorX][cursorY].flagged = true;
+                        remainingMines--;
+                    } else if (grid[cursorX][cursorY].flagged) {
+                        grid[cursorX][cursorY].flagged = false;
+                        remainingMines++;
+                    }
+                }
                 break;
         }
     }
@@ -248,6 +319,8 @@ int main(int argc, char *argv[]) {
             renderEndGame(renderer, "/data/minesweeper/victory.jpg");
         } else {
             renderGrid(renderer, font);
+            renderPanel(renderer, font);
+
         }
 
         SDL_RenderPresent(renderer);
