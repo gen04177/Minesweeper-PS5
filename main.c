@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define SCREEN_WIDTH 320 // 10 tiles * 32 pixels per tile
-#define SCREEN_HEIGHT 320 // 10 tiles * 32 pixels per tile
+#define SCREEN_WIDTH 512 // 16 tiles * 32 pixels per tile
+#define SCREEN_HEIGHT 512 // 16 tiles * 32 pixels per tile
 #define TILE_SIZE 32
-#define GRID_WIDTH 10
-#define GRID_HEIGHT 10
-#define NUM_MINES 10
+#define GRID_WIDTH 16
+#define GRID_HEIGHT 16
+#define NUM_MINES 40
 
 typedef struct {
     int x, y;
@@ -104,8 +104,10 @@ void renderGrid(SDL_Renderer *renderer, TTF_Font *font) {
     }
 
     SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    SDL_Rect cursorRect = {cursorX * TILE_SIZE, cursorY * TILE_SIZE, TILE_SIZE, TILE_SIZE};
-    SDL_RenderDrawRect(renderer, &cursorRect);
+    for (int i = 0; i < 3; i++) {
+	    SDL_Rect cursorRect = {cursorX * TILE_SIZE - i, cursorY * TILE_SIZE - i, TILE_SIZE + 2 * i, TILE_SIZE + 2 * i};
+    	    SDL_RenderDrawRect(renderer, &cursorRect);
+    }
 }
 
 void renderEndGame(SDL_Renderer *renderer, const char *imagePath) {
@@ -125,7 +127,7 @@ void revealTile(int x, int y) {
         if (grid[x][y].hasMine) {
 
             gameLost = true;
-            gameEndTime = SDL_GetTicks() + 5000;
+            gameEndTime = SDL_GetTicks() + 3000;
         } else {
             if (grid[x][y].neighboringMines == 0) {
                 for (int dx = -1; dx <= 1; dx++) {
@@ -149,7 +151,7 @@ void revealTile(int x, int y) {
             }
             if (won) {
                 gameWon = true;
-                gameEndTime = SDL_GetTicks() + 5000;
+                gameEndTime = SDL_GetTicks() + 3000;
             }
         }
     }
