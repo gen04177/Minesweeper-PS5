@@ -15,5 +15,8 @@ This is an SDL2/C game for jailbroken PS5 (1.xx-4xx).
 5. Execute `telnet [PS5-IP] 2323`.
 6. Run the command `hbldr minesweeper.elf`.
 
+## Controls:
+Arrows for navigation, Cross to reveal a tile, Circle to flag a tile, and L1 to pause/resume music.
+
 ## Credits
 J. Tornblom - SDK and required payloads.
