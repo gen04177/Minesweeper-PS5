@@ -1,6 +1,6 @@
 # Minesweeper (PS5)
 
-This is an SDL2/C game for jailbroken PS5 (1.xx-4xx).
+This is an SDL2/C game for jailbroken PS5 (1.xx-5xx).
 
 ## Prerequisites
 - elfldr.elf
@@ -16,7 +16,15 @@ This is an SDL2/C game for jailbroken PS5 (1.xx-4xx).
 6. Run the command `hbldr minesweeper.elf`.
 
 ## Controls:
-Arrows for navigation, Cross to reveal a tile, Circle to flag a tile, and L1 to pause/resume music.
+Arrows: navigation
+
+Cross: reveal a tile
+
+Circle: flag a tile
+
+L1: pause/resume music
+
+Touchpad: menu
 
 ## Credits
-J. Tornblom - SDK and required payloads.
+- J. Tornblom - SDK and required payloads.
